@@ -25,7 +25,6 @@ function UploadFileForm() {
     event.preventDefault();
     const cid = await client.put([file]);
     setRootCid(cid);
-    console.log(cid);
     write({ args: [cid, Number(price)] });
   };
 
