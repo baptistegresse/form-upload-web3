@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 import '@rainbow-me/rainbowkit/styles.css';
-import { getDefaultWallets, RainbowKitProvider } from '@rainbow-me/rainbowkit';
+import { darkTheme, getDefaultWallets, RainbowKitProvider } from '@rainbow-me/rainbowkit';
 import { configureChains, createConfig, WagmiConfig } from "wagmi";
 import { filecoinTestNet } from './chain.tsx';
 import { filecoin } from 'wagmi/chains';
@@ -29,7 +29,7 @@ const wagmiConfig = createConfig({
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <WagmiConfig config={wagmiConfig}>
-      <RainbowKitProvider chains={chains}>
+      <RainbowKitProvider theme={darkTheme()} chains={chains}>
         <App />
       </RainbowKitProvider>
     </WagmiConfig>

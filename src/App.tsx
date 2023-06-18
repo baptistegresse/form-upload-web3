@@ -1,55 +1,56 @@
-import { ConnectButton } from '@rainbow-me/rainbowkit'
+import { useState } from 'react';
+import { useOnlyFileUploadFile } from '../contract/generated';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { Web3Storage } from 'web3.storage'
-import { useForm } from 'react-hook-form'
-import { useAccount } from 'wagmi'
-import './App.css'
-
-type FormValues = {
-  fileToUpload: FileList;
-  price: number;
-  walletAddress: string;
-};
+import './UploadFileForm.css'; 
 
 const getAccessToken = () => {
-  return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkaWQ6ZXRocjoweDMxMjEzQmRCOTg2M0MwZDgyZGFBMzM2MjlDZjNENTg1NTA4RjQ1NDEiLCJpc3MiOiJ3ZWIzLXN0b3JhZ2UiLCJpYXQiOjE2ODU4MjYxOTIxODksIm5hbWUiOiJwcm9qZWN0In0.ackTlCMEFtHo4LR911-ASbdOa4mOiJAfElQVgQVJq2U";
+  return 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkaWQ6ZXRocjoweDMxMjEzQmRCOTg2M0MwZDgyZGFBMzM2MjlDZjNENTg1NTA4RjQ1NDEiLCJpc3MiOiJ3ZWIzLXN0b3JhZ2UiLCJpYXQiOjE2ODU4MjYxOTIxODksIm5hbWUiOiJwcm9qZWN0In0.ackTlCMEFtHo4LR911-ASbdOa4mOiJAfElQVgQVJq2U'
 };
 
 const client = new Web3Storage({ token: getAccessToken() });
 
-function App() {
-  const { register, handleSubmit } = useForm<FormValues>();
-  const { address, isConnecting, isDisconnected } = useAccount();
+function UploadFileForm() {
+  const [file, setFile] = useState(null);
+  const [price, setPrice] = useState('');
+  const [rootCid, setRootCid] = useState(null);
+  const contractAddress = '0x57E364d2F200caCBA340CBe159A1E6C95A1d4E48';
+  const { isLoading, isSuccess, write} = useOnlyFileUploadFile({ address: contractAddress });
 
-  const onSubmit = async (data: FormValues) => {
-    const file = data.fileToUpload[0];
-    const rootCid = await client.put([file]);
-    const info = await client.status(rootCid);
+  const handleFileChange = (event) => {
+    setFile(event.target.files[0]);
+  }
 
-    if (info != null) {
-      const fileInfo = {
-        cid: rootCid,
-        priceInFIL: data.price,
-        walletAddress: address,
-      };
-
-      console.log(fileInfo);
-    }
+  const handleFormSubmit = async (event) => {
+    event.preventDefault();
+    const cid = await client.put([file]);
+    setRootCid(cid);
+    console.log(cid);
+    write({ args: [cid, Number(price)] });
   };
 
   return (
-    <>
+    <div className="upload-file-form">
       <ConnectButton />
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <h1>Upload Private File</h1>
+      <form onSubmit={handleFormSubmit}>
         <div>
-          <label htmlFor="fileToUpload">File to upload to Filecoin</label>
-          <input type="file" {...register("fileToUpload")} />
-          <label htmlFor="price">Price in FIL</label>
-          <input type="number" step="0.0001" {...register("price")} />
+          <label htmlFor="file">chose a file</label>
+          <input id='file' type="file" onChange={handleFileChange} required />
         </div>
-        <button type="submit">Submit</button>
+        <div>
+          <input placeholder='price in FIL' type="number" id="price" value={price} onChange={(e) => setPrice(e.target.value)} required />
+        </div>
+        <div className='submit-box'>
+          <button id='sub-bouton' type="submit" disabled={isLoading || !file}>
+            Upload
+          </button>
+          {isSuccess && <div>File uploaded successfully! Check the file <a href={`https://${rootCid}.ipfs.dweb.link`} target="_blank" rel="noreferrer">here</a></div>}
+          {isLoading && <div>Uploading file...</div>}
+        </div>
       </form>
-    </>
+    </div>
   );
 }
 
-export default App;
+export default UploadFileForm;
